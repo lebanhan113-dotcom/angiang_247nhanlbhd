@@ -1,0 +1,366 @@
+TRƯỜNG TRUNG HỌC PHỔ THÔNG HÒN ĐẤT
+SỔ TAY THỰC HÀNH
+XÂY DỰNG PHÒNG THI TRỰC TUYẾN
+BẰNG TRÍ TUỆ NHÂN TẠO
+CHATGPT  +  GOOGLE AI STUDIO  +  SUPABASE
+HƯỚNG DẪN “CẦM TAY CHỈ VIỆC” • PHIÊN BẢN V11.2
+01
+NHẬP WORD/PDF	02
+TỰ NHẬN ĐÁP ÁN	03
+THU BÀI ONLINE
+TÁC GIẢ GIẢI PHÁP
+Giáo viên: Lê Bá Nhẫn – Trường THPT Hòn Đất (Tỉnh An Giang)
+TÀI LIỆU HƯỚNG DẪN THỰC HÀNH VÀ CHUYỂN GIAO GIẢI PHÁP
+ 
+LỜI GIỚI THIỆU
+Tài liệu này hướng dẫn giáo viên xây dựng, kiểm thử và vận hành phòng thi trực tuyến của Trường THPT Hòn Đất. Quy trình bám sát bộ sản phẩm đã phát triển qua các phiên bản đến V11.2: tách riêng cổng học sinh và khu vực quản trị, nhập đề Word/PDF, nhận diện đáp án đã đánh dấu, kiểm soát phát hành và thu bài bằng Supabase.
+Mục tiêu là giúp người chưa chuyên lập trình cũng có thể thực hiện từng thao tác, sử dụng câu lệnh có sẵn với ChatGPT và Google AI Studio, biết cần kiểm tra những gì trước khi giao bài và nhận biết rõ phần nào chỉ là bản thử nghiệm.
+QUAN TRỌNG TRƯỚC KHI BẮT ĐẦU
+Bản HTML chạy cục bộ không tự đồng bộ kết quả giữa các máy. Muốn học sinh nộp bài và giáo viên nhận kết quả trên Internet, phải có website HTTPS, dự án Supabase, xác thực quản trị và quy tắc phân quyền được thử nghiệm thực tế. Không tuyên bố đã vận hành trực tuyến khi chưa hoàn thành kiểm thử hai thiết bị.
+
+Quy ước chữ và cấu trúc trong sổ tay
+•	THAO TÁC: chỉ ra vị trí cần mở, nút cần nhấn và dữ liệu cần nhập.
+•	CÂU LỆNH: đoạn văn giáo viên có thể sao chép vào ChatGPT hoặc Google AI Studio.
+•	ĐẦU RA: tệp, trang giao diện hoặc trạng thái phải có khi kết thúc bước.
+•	KIỂM TRA: tình huống cụ thể cần thử trước khi sang bước tiếp theo.
+Danh mục tệp trong bộ phòng thi hiện có
+Tệp / thành phần	Mục đích	Lưu ý
+quan_tri_giao_vien.html	Nhập đề, duyệt đáp án, biểu điểm, phát hành, thu bài	Không đăng công khai file có đáp án riêng.
+index.html	Cổng học sinh làm bài trên Internet	Không nhúng đề/đáp án riêng chưa công bố.
+supabase_setup_v11.sql	Tạo bảng, hàm lưu bài, công bố đáp án và thống kê	Cần chạy trong SQL Editor của dự án Supabase đã chọn.
+Nguon GK1 Hoa 10-001 - TRONDE - 3P - AI.docx	Đề mẫu với 3 phần và dấu đáp án Word	18 câu I + 2 câu II + 4 câu III.
+JSON chuẩn hóa	Giữ câu hỏi, đáp án, nguồn, biểu điểm và phiên bản	Lưu kèm tệp Word gốc để đối chiếu.
+
+Lộ trình tổng quát
+Giai đoạn	Phương tiện	Sản phẩm
+A. Chuẩn hóa đề	ChatGPT + Word	JSON gốc, danh sách câu cần duyệt
+B. Xây giao diện	Google AI Studio (Build)	Màn hình giáo viên/học sinh, bản Preview
+C. Kiểm soát phát hành	Giáo viên + biểu điểm	Các đề đã duyệt, có version, đang phát hành
+D. Thu bài online	Supabase + website HTTPS	Bài nộp tập trung, thống kê, công bố đáp án
+E. Nghiệm thu	Hai thiết bị + bảng thử	Biên bản kiểm thử, phương án sao lưu
+
+PHẦN I. CHUẨN BỊ VÀ CHUẨN HÓA ĐỀ BẰNG CHATGPT
+BƯỚC 01. Chuẩn bị thiết bị, tài khoản và thư mục dự án
+THAO TÁC THỰC HIỆN:
+1.  Mở Chrome hoặc Edge trên máy tính; kiểm tra kết nối mạng ổn định.
+2.  Đăng nhập ChatGPT tại https://chatgpt.com và Google AI Studio tại https://aistudio.google.com.
+3.  Tạo một thư mục dự án trên máy: PHONG_THI_THPT_HON_DAT. Tạo các thư mục con 01_DE_GOC, 02_JSON, 03_HTML, 04_SUPABASE, 05_KIEM_THU, 06_SAO_LUU.
+4.  Lưu các file Word/PDF nguyên bản vào 01_DE_GOC. Không ghi đè tài liệu gốc khi hiệu đính.
+5.  Chuẩn bị tối thiểu hai thiết bị (máy giáo viên và điện thoại học sinh) để thử nghiệm thu bài.
+ĐẦU RA
+Có tài khoản công cụ, thư mục dự án và đề gốc. Trong thư mục giáo viên không đặt mật khẩu quản trị, secret key hoặc dữ liệu cá nhân thật vào tệp sẽ đăng công khai.
+
+BƯỚC 02. Đưa đề gốc vào ChatGPT và xác định ba phần
+1.  Tạo cuộc trò chuyện mới, đặt tên: “Phòng thi AI THPT Hòn Đất – Chuẩn hóa đề”.
+2.  Nhấn nút tải tệp, chọn tài liệu .docx hoặc .pdf.
+3.  Dán CÂU LỆNH 01 trong phụ lục, yêu cầu liệt kê chính xác Phần I, II, III, số câu và vị trí đáp án.
+4.  Kiểm tra báo cáo: số câu của từng phần phải khớp với Word. Đề mẫu 001 AI: 18 câu ở Phần I, 2 câu Đúng–Sai ở Phần II (8 ý), 4 câu ở Phần III.
+5.  Đặt nhãn “CHƯA ĐỌC ĐƯỢC” cho câu có hình/công thức không trích được, tránh tạo phương án giả.
+KIỂM TRA
+Không được gộp Phần II thành câu nhiều lựa chọn; không được mất 4 ý a–d. Đề mới có cấu trúc khác phải đọc theo tài liệu thật, không ép về số câu của đề mẫu.
+
+BƯỚC 03. Nhận diện đáp án đã đánh dấu ngay trong Word
+Đây là bước quyết định chất lượng chấm tự động. Bộ đề mẫu có quy ước đánh dấu qua định dạng Word, nên chỉ lấy văn bản thuần sẽ làm mất đáp án.
+Phần	Dấu hiệu cần đọc	Dữ liệu ghi ra
+I. Nhiều lựa chọn	Nhãn A/B/C/D được tô đỏ và gạch chân	Đáp án tương ứng từng câu; lưu bằng chứng định dạng.
+II. Đúng – Sai	Ý a/b/c/d đỏ và gạch chân	Theo quy ước đề mẫu: ý được đánh dấu = Đúng; ý còn lại = Sai.
+III. Trả lời ngắn	Dòng “Đáp án: ...” sau câu	Giữ số thập phân, dấu phẩy và quy tắc làm tròn như gốc.
+
+1.  Sao chép CÂU LỆNH 02 vào ChatGPT, yêu cầu phân tích định dạng runs trong DOCX, kể cả RGB màu đỏ, gạch chân, tô sáng và trường Equation.
+2.  Đối chiếu ngẫu nhiên ít nhất 5 câu trong Word với bảng đáp án đã nhận; kiểm tra riêng câu có dấu màu/định dạng lẫn trong văn bản.
+3.  Nếu nhãn đỏ nhưng chưa rõ đó là đáp án hay nhấn mạnh, đánh dấu “CẦN DUYỆT”; không tự gán đáp án.
+4.  Xuất JSON có trạng thái và nguồn đánh dấu rõ ràng, ví dụ source_answer = “red_underline”.
+ 
+Hình 1. Màn hình duyệt đề theo ba phần và thống kê đáp án đã đọc.
+BƯỚC 04. Giữ nguyên công thức, ký hiệu hóa học và ảnh gốc
+1.  Kiểm tra chỉ số trên/dưới: ³⁵₁₇Cl, Al³⁺, 3s²3p⁵; các công thức và mũi tên phản ứng không được biến thành ký tự sai.
+2.  Nếu Word sử dụng Equation/OMML, yêu cầu trích nội dung từ XML hoặc ảnh nguyên gốc trước khi dựng LaTeX.
+3.  Với PDF có sơ đồ/ảnh, trích đúng ảnh thật và nhúng dữ liệu hoặc lưu tệp cùng đề; tuyệt đối không dùng hình dựng lại để thay số liệu.
+4.  Với PDF quét, cần OCR chuyên dụng và kiểm tra thủ công; không tuyên bố tự đọc chính xác 100%.
+KIỂM TRA: mở bản xem trước cả trên máy tính và điện thoại. Các dấu trong ký hiệu hạt nhân, chỉ số ion và orbital đều phải rõ.
+BƯỚC 05. Thẩm định đáp án, lời giải và biểu điểm
+1.  Mở bảng đáp án trích từ Word, rà theo mã câu; xác nhận mỗi câu nhận đúng đáp án của chính nó.
+2.  Các câu có nhiều đáp án hợp lý, sai thuật ngữ hoặc dữ kiện tính toán chưa nhất quán cần đưa vào danh sách phải duyệt.
+3.  Điền điểm Phần I, II, III theo quyết định của giáo viên; không tự đặt tổng điểm khi Word không có biểu điểm.
+4.  Chọn quy tắc chấm Đúng–Sai (từng ý / tất cả đúng / thang riêng) và quy tắc đối chiếu trả lời ngắn.
+5.  Lưu biên bản: người duyệt, ngày duyệt, mã đề và phiên bản.
+LƯU Ý CHUYÊN MÔN TỪ ĐỀ MẪU
+Ở đề Hóa 10 mẫu, câu về bán kính nguyên tử có nguy cơ nhiều lựa chọn đúng; câu liên quan sodium iodate/sodium iodide cần kiểm tra thuật ngữ. Giữ nguyên dấu đáp án nguồn để đối chiếu, nhưng phải được giáo viên duyệt trước khi sử dụng tính điểm.
+
+BƯỚC 06. Xuất JSON chuẩn hóa và lưu “nguồn dữ liệu duy nhất”
+Tải JSON theo cấu trúc thống nhất, kèm file Word gốc. Mỗi câu có ID duy nhất, số thứ tự trong phần, kiểu câu, nội dung, lựa chọn/ý nhỏ, nguồn ảnh/công thức, đáp án và trạng thái.
+MẪU DỮ LIỆU TỐI THIỂU
+exam_id, title, version, section, question_id, stem, options/statements, answer, solution, points, source_page, source_answer, review_status, published_at. Phần I, II, III phải được tách riêng và có danh sách câu đúng thứ tự.
+
+ĐẦU RA: đề gốc và JSON được lưu trong 01_DE_GOC, 02_JSON; ghi ngày phiên bản và tránh chỉnh sửa một bản đã phát hành mà không tăng version.
+ 
+PHẦN II. THIẾT KẾ ỨNG DỤNG TRÊN GOOGLE AI STUDIO
+BƯỚC 07. Tạo ứng dụng mới trong Google AI Studio – Build
+1.  Vào https://aistudio.google.com và đăng nhập tài khoản Google.
+2.  Mở chế độ Build (Tạo ứng dụng); chọn tạo ứng dụng web mới.
+3.  Dán CÂU LỆNH 05, mô tả phòng thi với 2 vai trò, ba phần và Supabase.
+4.  Thêm JSON mẫu hoặc mã nguồn đang có qua chức năng tải tệp/nhập GitHub nếu giao diện cho phép.
+5.  Đợi giao diện Preview hiện ra; chưa bấm Publish khi dữ liệu hoặc xác thực chưa kiểm thử.
+Google AI Studio Build có thể tạo ứng dụng full-stack (frontend và server), cho phép chỉnh trong Code, xuất ZIP/đồng bộ GitHub và triển khai Cloud Run tùy tài khoản. Không mặc định “một file HTML” là đủ để thu bài từ nhiều máy.
+BƯỚC 08. Thiết kế màn hình theo luồng giáo viên và học sinh
+Màn hình giáo viên	Màn hình học sinh
+Đăng nhập + xác thực máy chủ	Danh sách đề đang phát hành
+Kho đề Word/PDF/JSON + tìm kiếm	Nhập họ tên, lớp; chọn đề
+Duyệt nội dung/đáp án/điểm	Làm bài theo ba phần, đồng hồ
+Duyệt đề và phát hành nhiều đề	Nộp bài và nhận xác nhận
+Bài làm + thống kê + Excel	Tra cứu lại khi giáo viên công bố đáp án
+
+Giao diện: tiếng Việt, tông xanh navy – trắng, responsive; nút giao đề và nút công bố đáp án phải có cảnh báo xác nhận. Không hiển thị đáp án trước khi được bật ở phía máy chủ.
+BƯỚC 09. Tự nhập Word/PDF – không cần lưu bản nháp
+1.  Trong trang quản trị, chọn “Kho đề / Tải đề”.
+2.  Chọn file Word/PDF; hệ thống trích nội dung ba phần, công thức, ảnh thật và đáp án đánh dấu.
+3.  Đề được lưu vào kho trong trạng thái CHƯA DUYỆT và tự mở trang DUYỆT ĐỀ.
+4.  Màn hình hiển thị số câu/đáp án từng Phần I, II, III; câu lỗi có cảnh báo để sửa.
+5.  Sau khi đủ điều kiện mới cho phép “DUYỆT & PHÁT HÀNH”.
+NGUYÊN TẮC NHẬP ĐỀ
+Không tạo câu mẫu khi file trích xuất lỗi; không tự suy đoán đáp án. PDF có lớp chữ có thể cần thư viện PDF và Internet; PDF quét cần OCR. Bỏ bước “Lưu file nháp” không có nghĩa là bỏ bước giáo viên duyệt.
+
+BƯỚC 10. Thiết lập chấm điểm từng phần và giải thích sau nộp
+1.  Giáo viên nhập điểm tối đa cho từng Phần I, II, III (theo biểu điểm đã duyệt).
+2.  Hệ thống phân bổ điểm từng câu và từng ý theo cấu hình; ghi điểm tối đa và quy tắc chấm ở JSON riêng.
+3.  Phần tự luận (nếu về sau được bổ sung) lưu nguyên bài để giáo viên chấm, không tự chấm nếu thiếu thang rõ.
+4.  Khi học sinh nộp bài: máy chủ xác nhận nhận bài và mã tra cứu, chưa trả đáp án nếu giáo viên chưa bật công bố.
+5.  Khi giáo viên bật đáp án: trang tra cứu mới trả câu hỏi, lựa chọn đã làm, đáp án, lời giải và điểm được phép công bố.
+BƯỚC 11. Duyệt và phát hành nhiều đề đang hiện hành
+1.  Lần lượt vào từng đề, xác nhận đủ câu, đáp án, điểm và thời gian; mỗi đề có exam_id riêng.
+2.  Nhấn “Phát hành” hoặc “Giao đồng thời các đề đủ điều kiện”; hệ thống chỉ đưa đề ĐÃ DUYỆT lên trang học sinh.
+3.  Mỗi lần cập nhật nội dung/đáp án đã phát hành, tăng version và lưu snapshot đáp án để chấm đúng các bài nộp cũ.
+4.  Đóng một đề phải không ảnh hưởng những đề khác đang chạy; trạng thái hiển thị: Chưa duyệt / Đã duyệt / Đang diễn ra / Đã đóng.
+BƯỚC 12. Xuất bản thử nghiệm và kiểm tra cục bộ
+1.  Trong AI Studio chọn Preview; thử ít nhất 1 câu mỗi dạng và điều hướng trước/sau.
+2.  Xuất code dạng ZIP hoặc file HTML nếu cấu trúc dự án hỗ trợ; sao lưu vào 03_HTML.
+3.  Mở bằng Chrome/Edge; kiểm tra việc nộp lại, gián đoạn mạng, hết giờ, làm mới trang.
+4.  Nếu chỉ có localStorage, ghi rõ chế độ dùng thử; không coi bài đó đã về máy giáo viên.
+PHẦN III. KẾT NỐI SUPABASE VÀ THU BÀI TRỰC TUYẾN
+BƯỚC 13. Tạo dự án Supabase dùng chung cho hai chế độ
+1.  Mở https://supabase.com/dashboard, đăng nhập rồi chọn New project (Tạo dự án).
+2.  Đặt tên ví dụ “phong-thi-thpt-hon-dat”, đặt mật khẩu cơ sở dữ liệu mạnh và chọn vùng máy chủ phù hợp.
+3.  Sau khi tạo xong, mở Project Connect hoặc Settings > API Keys; lấy Project URL và Publishable key.
+4.  Lưu Project URL và Publishable key để nhập vào cấu hình ứng dụng; KHÔNG đưa secret/service role key vào file HTML.
+Dự án chỉ thực sự có thu bài khi các bước SQL, Auth/RLS, kết nối và kiểm thử với URL thật của trường đều thành công.
+BƯỚC 14. Chạy SQL V11 và tạo tài khoản quản trị
+1.  Trong Supabase mở SQL Editor → New query.
+2.  Mở tệp supabase_setup_v11.sql thuộc bộ dự án, sao chép toàn bộ nội dung vào SQL Editor, xem kỹ phạm vi thay đổi rồi bấm Run.
+3.  Vào Authentication → Users, tạo/mời người dùng giáo viên bằng email nhà trường.
+4.  Lấy UUID người dùng đã tạo; đăng ký UUID đó vào bảng app_admins theo hướng dẫn trong bộ dự án.
+5.  Kiểm tra các bảng exams_public, exams_private, exam_versions_private, exam_submissions, app_visitors, exam_participations và các hàm RPC tương ứng.
+6.  Chạy tệp SQL kiểm tra quyền; dùng tài khoản học sinh/ẩn danh thử truy cập bảng đáp án, bài nộp và phải bị từ chối.
+LƯU Ý VỀ MẬT KHẨU GIÁO VIÊN
+Mã giao diện “123123” chỉ là mã demo theo yêu cầu của dự án; không phải mật khẩu máy chủ an toàn. Tài khoản Supabase Auth có mật khẩu riêng, đủ mạnh và phân quyền app_admins. Nên đổi cơ chế mã cố định trước khi áp dụng chính thức.
+
+BƯỚC 15. Cấu hình kết nối đồng nhất hai tệp HTML
+1.  Mở công cụ cấu hình Supabase (nếu sử dụng bản V11.1) hoặc màn hình “Đồng bộ trực tuyến” ở giao diện quản trị.
+2.  Nhập Project URL và Publishable key; chọn “Kiểm tra kết nối và quyền công khai”.
+3.  Sau khi kiểm tra đạt, xuất bản index.html dành cho học sinh và quan_tri_giao_vien.html dành cho giáo viên cùng trỏ đến một Supabase Project URL.
+4.  Không đưa câu hỏi có đáp án riêng vào mã nguồn công khai. Đáp án và biểu điểm phải lưu phía máy chủ với quyền giới hạn.
+5.  Giáo viên đăng nhập tài khoản Supabase Auth, sau đó phát hành đề để học sinh nhìn thấy.
+PHÂN QUYỀN TỐI THIỂU
+Anon: chỉ đọc đề đã phát hành và gửi bài qua API được kiểm soát. Authenticated không mặc định là giáo viên. Admin: xem/chấm bài và công bố đáp án. Secret key phải chỉ tồn tại trong máy chủ, tuyệt đối không nằm trong HTML tải về.
+
+BƯỚC 16. Quy trình bài nộp đi từ học sinh về quản trị
+Thời điểm	Học sinh	Máy chủ / giáo viên
+Bắt đầu	Chọn đề đang mở, nhập họ tên và lớp	Ghi phiên tham gia và phiên bản đề.
+Đang làm	Lưu tạm ở thiết bị, đồng hồ chạy	Không công bố đáp án.
+Nộp bài	Nhấn NỘP BÀI và nhận mã tra cứu	RPC/API nhận bài, lưu exam_submissions, ghi điểm hoặc trạng thái chưa chấm.
+Quản trị	Không thể xem bài người khác	Giáo viên xem danh sách bài nộp và thống kê.
+Công bố	Đăng nhập lại, tra cứu khi được bật	Kiểm tra cờ answers_visible trước khi trả đáp án/lời giải.
+
+Không trả bộ đáp án từ API nộp bài ngay khi giáo viên đang TẮT công bố. Việc che bằng CSS/JavaScript nhưng vẫn gửi sẵn đáp án xuống trình duyệt không đủ bảo mật.
+BƯỚC 17. Đưa website lên Internet và quản lý phiên bản
+1.  Chọn một phương án: Publish từ Google AI Studio lên Cloud Run nếu tài khoản đủ điều kiện; hoặc đồng bộ GitHub, triển khai bằng nền tảng hosting HTTPS phù hợp.
+2.  Nếu ứng dụng dùng server Node.js, phải triển khai đầy đủ cả frontend và backend, không chỉ chép một file index.html.
+3.  Đặt tên phiên bản phát hành ở footer/header (ví dụ V11.2) và version riêng của từng đề.
+4.  Mở đường dẫn trên máy tính và điện thoại không cùng mạng để kiểm tra dữ liệu thực.
+5.  Lưu tệp SQL, mã nguồn và nhật ký thay đổi vào thư mục dự án; có kế hoạch phục hồi phiên bản cũ.
+Theo tài liệu Google AI Studio, khả năng Publish và yêu cầu billing phụ thuộc điều kiện tài khoản: một số tài khoản đủ Starter Tier, tài khoản khác phải liên kết Google Cloud Project. Không mặc định tất cả giáo viên được xuất bản miễn phí.
+BƯỚC 18. Nghiệm thu thực tế trên HAI THIẾT BỊ KHÁC NHAU
+1.  Trên máy giáo viên: mở quản trị, đăng nhập Supabase Auth và kiểm tra đề đã phát hành, answers_visible = false.
+2.  Trên điện thoại học sinh (mạng di động khác Wi-Fi nhà trường): mở link, chọn đề, làm bài, nộp.
+3.  Quan sát máy giáo viên: phải thấy bài mới và thống kê tăng; bài vừa nộp giữ đúng exam_id, version và thông tin học sinh.
+4.  Thử tra cứu trước công bố: phải bị từ chối; bật đáp án và thử lại: phải hiện bài đã làm, đáp án, lời giải, điểm phù hợp.
+5.  Tắt công bố và thử tra cứu mới; yêu cầu trả lời từ máy chủ phải từ chối.
+6.  Thử đề A và B đang mở cùng lúc; đóng A không được làm B mất hiệu lực; xuất Excel kiểm tra có đủ dòng và mở được.
+7.  Thử trình duyệt ẩn danh truy cập bảng dữ liệu quản trị: phải bị chặn. Nếu có lỗi, chưa giao bài chính thức.
+PHẦN IV. BỘ CÂU LỆNH SẴN DÙNG (SAO CHÉP NGUYÊN KHỐI)
+Mỗi câu lệnh tương ứng một bước. Nên dán theo thứ tự để tránh yêu cầu AI xây hết hệ thống một lần và làm mất dữ liệu đề thi.
+CÂU LỆNH 01 – Đọc nguyên gốc đề Word/PDF và phân loại ba phần
+Dán vào: ChatGPT  |  Sao chép nguyên khối nội dung dưới đây.
+Bạn là chuyên gia số hóa đề thi Hóa học. Đọc toàn bộ tệp được tải lên, chỉ sử dụng nội dung thật của tệp.
+(1) Phân tách chính xác PHẦN I - Nhiều lựa chọn; PHẦN II - Đúng/Sai với đủ a,b,c,d; PHẦN III - Trả lời ngắn.
+(2) Đếm số câu mỗi phần, giữ nguyên số thứ tự, phương án, công thức, hình và trang nguồn.
+(3) Không tự sáng tác câu, ảnh hoặc đáp án. Đánh dấu câu chưa đọc rõ.
+(4) Xuất bảng kiểm đếm và dữ liệu JSON có ID câu, phần, loại, nội dung, đáp án nguồn, lời giải, thang điểm, trạng thái.
+Không tạo HTML ở bước này.
+
+CÂU LỆNH 02 – Tự nhận diện dấu đáp án trong Word
+Dán vào: ChatGPT  |  Sao chép nguyên khối nội dung dưới đây.
+Tệp DOCX của tôi đã có đáp án được đánh dấu bằng định dạng. Phân tích cả các run XML của Word (màu đỏ, gạch chân, tô sáng, bold, các trường Equation/OMML), không chỉ lấy plain text.
+Phần I: A/B/C/D màu đỏ và gạch chân là đáp án được đánh dấu.
+Phần II: a/b/c/d đỏ và gạch chân được hiểu là Đúng theo quy ước bộ đề mẫu; ý không đánh dấu là Sai.
+Phần III: đọc dòng “Đáp án: ...”.
+Gắn đáp án vào đúng ID câu, lưu bằng chứng định dạng; liệt kê câu không chắc chắn. Không suy đoán bằng kiến thức môn học, không thay đổi dấu gốc.
+
+CÂU LỆNH 03 – Bảo toàn công thức và hình ảnh thật
+Dán vào: ChatGPT  |  Sao chép nguyên khối nội dung dưới đây.
+Rà soát toàn bộ công thức hóa học, chỉ số trên/dưới, mũi tên phản ứng, ký hiệu nguyên tử và các Equation trong Word/PDF.
+Chỉ chuyển sang LaTeX khi kiểm tra được chính xác; còn không phải giữ đối tượng hoặc ảnh gốc. Nếu tài liệu có hình/sơ đồ, trích xuất ảnh thật, gắn đúng câu, không tạo hình giả hoặc đường dẫn giả.
+Trả về danh mục tài nguyên, số câu và trang cần người dạy kiểm tra.
+
+CÂU LỆNH 04 – Phản biện đề và kiểm tra đáp án nguồn
+Dán vào: ChatGPT  |  Sao chép nguyên khối nội dung dưới đây.
+Giữ nguyên đáp án đã đánh dấu trong file. Hãy PHÂN BIỆT: (A) Đáp án nguồn theo dấu Word; (B) kết quả kiểm tra chuyên môn; (C) những lỗi mơ hồ hoặc nhiều phương án đúng.
+Lập bảng chỉ gồm các câu cần giáo viên duyệt, giải thích căn cứ hóa học, không tự sửa đáp án nguồn. Không tạo biểu điểm nếu đề không cung cấp.
+
+CÂU LỆNH 05 – Tạo ứng dụng trên Google AI Studio Build
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy xây dựng ứng dụng web “PHÒNG THI TRỰC TUYẾN - TRƯỜNG THPT HÒN ĐẤT”, giao diện tiếng Việt xanh navy - trắng, responsive.
+Hai vai trò: Học sinh và Giáo viên. Dữ liệu đề được nhập từ JSON/Word/PDF thật, phân đúng ba phần và có hàng đợi giáo viên duyệt. Có kho nhiều đề, trạng thái phát hành, version, đồng hồ, tự lưu, nộp bài, bảng điểm, thống kê.
+Tách đáp án riêng phía máy chủ; chỉ đề đã duyệt, đã phát hành mới hiện cho học sinh. Giao đồng thời nhiều đề.
+Tạo Preview với toàn bộ câu thật, không dùng nội dung giả. Chưa phát hành lên Internet.
+
+CÂU LỆNH 06 – Thiết kế giao diện và điều hướng như một sản phẩm giáo dục
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy sửa UI/UX để giáo viên có Dashboard, kho đề tìm kiếm, thẻ trạng thái, màn hình duyệt từng phần, nhập điểm, giao bài và xem thống kê. Học sinh có danh sách đề hiện hành, trang nhập họ tên/lớp, thanh tiến độ 3 phần, danh sách số câu, đánh dấu xem lại, nút nộp xác nhận.
+Không sao chép thương hiệu hay mã nguồn Azota; xây dựng nhận diện THPT Hòn Đất.
+Kiểm tra ở kích thước 390px và desktop 1366px, không tràn bảng, công thức hay hình.
+
+CÂU LỆNH 07 – Nhập Word/PDF và bỏ nút lưu nháp
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Khi giáo viên chọn file Word/PDF, hãy tự trích 3 phần, các câu hỏi, đáp án đã đánh dấu và lời giải nguồn; đưa thẳng vào kho đề ở trạng thái CHƯA DUYỆT rồi mở màn hình DUYỆT ĐỀ.
+Không có bước “Lưu file nháp”. Hiện tóm tắt số câu và số đáp án từng Phần I/II/III. Không tạo dữ liệu thay thế khi PDF/Equation lỗi. Giáo viên vẫn phải xác nhận trước khi giao bài.
+
+CÂU LỆNH 08 – Tính điểm theo quy tắc giáo viên duyệt
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Tạo mục Điểm và quy tắc chấm theo từng phần: Phần I, II, III và từng câu. Không tự đặt điểm nếu nguồn thiếu.
+Phần I: kiểm tra đáp án A/B/C/D và cảnh báo nếu có nhiều đáp án hợp lý.
+Phần II: hỗ trợ chấm từng ý/tất cả ý/thang riêng; lưu đúng công thức quy tắc.
+Phần III: đối chiếu số, dấu phẩy thập phân và quy tắc làm tròn đã xác nhận.
+Tự luận (nếu có): để giáo viên chấm. Mọi điểm phải lưu gắn với version đã nộp.
+
+CÂU LỆNH 09 – Nhiều đề được phát hành đồng thời
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy hỗ trợ nhiều đề thi có status=published cùng lúc. Giáo viên có thể duyệt, giao, đóng từng đề độc lập hoặc giao tất cả đề đủ điều kiện.
+Mỗi đề có exam_id, version, bộ đếm giờ, đáp án, biểu điểm, danh sách bài nộp và thống kê riêng.
+Chỉ hiển thị đề đã duyệt và đã phát hành lên cổng học sinh. Khi sửa đề đang phát hành phải tạo version mới, giữ snapshot cho các bài cũ.
+
+CÂU LỆNH 10 – Kết nối Supabase đúng cách
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Bổ sung tích hợp Supabase dùng chung cho trang học sinh và quản trị. Dùng Project URL và publishable key phía trình duyệt; tuyệt đối không đưa secret/service_role vào client.
+Dùng Supabase Auth + bảng app_admins để phân quyền giáo viên. Bật RLS, giới hạn SELECT/INSERT/UPDATE và chỉ cho học sinh gửi bài qua RPC/API có xác thực dữ liệu.
+Ghi rõ các giá trị cấu hình người dùng phải điền; không báo “kết nối thành công” nếu chưa gọi thử cơ sở dữ liệu thật.
+
+CÂU LỆNH 11 – Không lộ đáp án khi học sinh nộp
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Khi học sinh NỘP BÀI, server chỉ trả xác nhận và mã tra cứu. Nếu answers_visible=false, không trả đáp án, lời giải hoặc điểm trong API response hay HTML nguồn.
+Giáo viên có nút bật/tắt công bố theo từng đề; sau khi bật, học sinh nhập lại họ tên + lớp và mã tra cứu nếu dùng thiết bị khác để xem lại bài của chính mình.
+Quyền xem phải kiểm tra ở server/RPC, không chỉ che bằng CSS. Khi tắt lại, yêu cầu tra cứu mới bị chặn.
+
+CÂU LỆNH 12 – Thống kê và lưu kết quả tập trung
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy lưu số phiên truy cập, số người truy cập ước tính, lượt bắt đầu thi, số bài nộp và điểm theo exam_id + version.
+Dashboard giáo viên tự làm mới có kiểm soát, có lọc theo đề/lớp/thời gian và xuất Excel .xlsx mở được.
+Không coi số lượt truy cập là số người duy nhất chính xác; không lưu dữ liệu định danh không cần thiết. Bảo vệ bảng dữ liệu học sinh bằng RLS.
+
+CÂU LỆNH 13 – Kiểm thử hai thiết bị và khắc phục lỗi
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy viết checklist kiểm thử end-to-end giữa hai trình duyệt độc lập: học sinh nhập thông tin, mở đề đã phát hành, nộp; giáo viên xem bài mới trên Supabase.
+Thử trường hợp hết giờ, mất mạng, nộp lặp, đáp án tắt/bật/tắt, đề A/B đồng thời, đổi version, Excel export, truy cập trái phép.
+Chỉ báo đạt khi có bằng chứng thử nghiệm và không có lỗi JavaScript; liệt kê bước còn thiếu nếu chưa có Supabase thật.
+
+CÂU LỆNH 14 – Xuất bản ứng dụng, sao lưu và quay lại version cũ
+Dán vào: Google AI Studio – Build  |  Sao chép nguyên khối nội dung dưới đây.
+Hãy lập quy trình xuất bản ứng dụng đúng kiến trúc: nếu có frontend + backend, triển khai đầy đủ lên hosting HTTPS/Cloud Run; nếu HTML thử nghiệm thì chỉ dùng nội bộ.
+Tạo version cho app và cho từng đề, nhật ký phát hành, chính sách sao lưu cơ sở dữ liệu và cách rollback.
+Không phát hành khi bảng đáp án hoặc bài nộp còn bị anon đọc công khai. Xuất hướng dẫn kiểm tra sau deploy.
+
+PHẦN V. PHIẾU KIỂM THỬ VÀ NGHIỆM THU
+Đánh dấu ĐẠT/CHƯA ĐẠT sau khi thử trực tiếp. Các mục liên quan máy chủ chỉ được đánh ĐẠT khi đã kiểm tra trên dự án Supabase của trường.
+STT	Nội dung nghiệm thu	Kết quả
+01	Tài liệu gốc được giữ nguyên, không mất công thức/hình	□ Đạt    □ Chưa đạt
+02	Phần I, II, III đúng thứ tự và số câu	□ Đạt    □ Chưa đạt
+03	Phần II có đủ a–d, không biến thành trắc nghiệm 4 lựa chọn	□ Đạt    □ Chưa đạt
+04	Đáp án đỏ gạch chân ở Word được ghép đúng câu	□ Đạt    □ Chưa đạt
+05	Đáp án trả lời ngắn từ dòng “Đáp án”	□ Đạt    □ Chưa đạt
+06	Câu mơ hồ/sai được cảnh báo để giáo viên duyệt	□ Đạt    □ Chưa đạt
+07	Không có bước lưu bản nháp sau khi tải Word/PDF	□ Đạt    □ Chưa đạt
+08	Giáo viên nhập điểm theo từng phần và quy tắc chấm	□ Đạt    □ Chưa đạt
+09	Chưa duyệt không được xuất hiện trên trang học sinh	□ Đạt    □ Chưa đạt
+10	Có thể giao nhiều đề đã duyệt cùng lúc	□ Đạt    □ Chưa đạt
+11	Đóng riêng đề A không làm mất đề B	□ Đạt    □ Chưa đạt
+12	Công khai hiển thị app version và đề version	□ Đạt    □ Chưa đạt
+13	Học sinh không thấy đáp án khi đang làm	□ Đạt    □ Chưa đạt
+14	Nộp bài máy chủ chỉ trả xác nhận khi đáp án tắt	□ Đạt    □ Chưa đạt
+15	Bài nộp lưu ở Supabase, giáo viên nhìn thấy trên thiết bị khác	□ Đạt    □ Chưa đạt
+16	Nộp lặp/đứt mạng không tạo bài sai hoặc mất dữ liệu	□ Đạt    □ Chưa đạt
+17	Mã tra cứu chỉ mở đúng bài của học sinh	□ Đạt    □ Chưa đạt
+18	Giáo viên bật/tắt công bố có hiệu lực phía máy chủ	□ Đạt    □ Chưa đạt
+19	Ẩn danh không đọc được đáp án private và bài nộp	□ Đạt    □ Chưa đạt
+20	Tài khoản không thuộc app_admins không có quyền quản trị	□ Đạt    □ Chưa đạt
+21	Secret key không xuất hiện trong HTML công khai	□ Đạt    □ Chưa đạt
+22	Excel mở được trong Excel/LibreOffice với đủ các cột	□ Đạt    □ Chưa đạt
+23	Thông kê phân biệt lượt truy cập, tham gia và nộp	□ Đạt    □ Chưa đạt
+24	Website HTTPS hoạt động trên máy tính và điện thoại	□ Đạt    □ Chưa đạt
+25	Có bản sao lưu, nhật ký phát hành và phương án rollback	□ Đạt    □ Chưa đạt
+
+PHẦN VI. XỬ LÝ LỖI THƯỜNG GẶP
+Hiện tượng	Nguyên nhân cần kiểm tra	Hướng xử lý
+Word có đáp án nhưng không tự điền	Đáp án nằm trong run đỏ gạch chân, bộ đọc chỉ dùng text thuần	Kiểm tra OOXML run formatting; dùng câu lệnh 02, duyệt dấu mơ hồ.
+Ba phần bị gộp	Parser không nhận tiêu đề PHẦN I/II/III	Bắt buộc phân theo heading, kiểm đếm phần trước khi tạo câu.
+Câu có công thức bị mất	Equation/OMML không được trích	Giữ nguồn Equation, xuất ảnh gốc; không tự tạo phương án mới.
+PDF đọc thiếu	File scan hoặc PDF.js chưa tải	Kiểm tra PDF có lớp chữ; OCR riêng nếu cần, duyệt thủ công.
+Học sinh không thấy đề	Chưa duyệt/chưa phát hành; client không kết nối server	Kiểm tra status, version, mạng và quyền đọc exams_public.
+Giáo viên không thấy bài mới	Học sinh chưa nộp server; hai file trỏ khác Supabase	Đối chiếu Project URL, bảng exam_submissions và log RPC.
+Hiện đáp án ngay sau nộp	API gửi grade/key ngay khi answers_visible=false	Sửa API máy chủ và thử lại bằng DevTools Network.
+Supabase 401/403	Thiếu Auth, grant hoặc RLS	Kiểm tra đăng nhập và policies; không tắt RLS để xử lý nhanh.
+Excel tải về không mở được	XLSX/ZIP/XML sinh sai	Kiểm tra file XLSX thực tế, thử mở bằng Excel.
+Không tìm được bài tra cứu	Sai tên/lớp/mã tra cứu hoặc chưa công bố	Xác nhận đúng bài và cờ công bố; không mở công khai danh sách bài.
+Đề A đóng làm ảnh hưởng B	Dùng biến trạng thái toàn cục thay vì theo exam_id	Tách trạng thái, phiên, đồng hồ theo exam_id.
+Mất bài khi đổi điện thoại	Lưu tạm bằng localStorage, chưa gửi server	Không coi là đã nộp; kiểm tra máy chủ trả mã nhận bài.
+
+PHẦN VII. VẬN HÀNH MỖI ĐỢT KIỂM TRA
+Trước giờ thi
+1.  Sao lưu dữ liệu, kiểm tra mạng, đăng nhập quản trị máy chủ.
+2.  Rà số câu, điểm và đáp án của đề sắp mở; chỉ mở đề đã duyệt.
+3.  Kiểm tra answers_visible=false và version trên trang học sinh.
+4.  Mở một máy thử nộp bài thật ở môi trường thử nghiệm riêng; kiểm tra máy giáo viên nhận được.
+Trong giờ thi
+1.  Theo dõi số phiên truy cập và số học sinh bắt đầu làm bài, phân biệt các số liệu này.
+2.  Theo dõi bài đã nộp theo lớp và mã đề; xử lý sự cố mất mạng theo quy trình của trường.
+3.  Không chỉnh nội dung đề đang diễn ra nếu không có quy trình phát hành version mới.
+Sau giờ thi
+1.  Đóng đề tương ứng, giữ đề khác tiếp tục mở nếu chưa hết ca.
+2.  Đối chiếu số học sinh dự thi với bài nộp; chấm bổ sung nếu có tự luận.
+3.  Xuất Excel, sao lưu cơ sở dữ liệu, ghi nhật ký phát hành.
+4.  Chỉ bật đáp án cho đề được phép công bố; kiểm tra tra cứu riêng tư.
+PHỤ LỤC A. NHẬT KÝ PHÁT HÀNH MẪU
+Ngày / giờ	App version	Exam ID / phiên bản	Người duyệt	Trạng thái
+……/……/……	V11.2	…… / v……	…………	…………
+……/……/……	………	…… / v……	…………	…………
+……/……/……	………	…… / v……	…………	…………
+
+PHỤ LỤC B. KỊCH BẢN TẬP HUẤN 90 PHÚT
+Thời lượng	Việc giảng viên làm	Sản phẩm học viên
+0–15 phút	Giới thiệu quy trình và mở bộ Word mẫu	Thư mục và tài khoản công cụ
+15–35 phút	Nhập Word vào ChatGPT, nhận dấu đáp án	JSON và bảng 3 phần
+35–55 phút	Tạo/sửa giao diện trong AI Studio Build	Preview đủ dạng câu
+55–75 phút	Duyệt, chấm điểm, phát hành nhiều đề	Đề đã duyệt và trạng thái đúng
+75–90 phút	Demo Supabase và kiểm thử hai thiết bị	Phiếu kiểm thử, xử lý lỗi, sao lưu
+
+PHỤ LỤC C. ĐỊA CHỈ THAM KHẢO VÀ BẢO MẬT
+ChatGPT: https://chatgpt.com
+Google AI Studio: https://aistudio.google.com
+Google AI Studio – Build: https://ai.google.dev/gemini-api/docs/aistudio-build-mode
+Google AI Studio – Deploy: https://ai.google.dev/gemini-api/docs/aistudio-deploying
+Supabase Dashboard: https://supabase.com/dashboard
+Supabase – API Keys: https://supabase.com/docs/guides/getting-started/api-keys
+Supabase – Row Level Security: https://supabase.com/docs/guides/database/postgres/row-level-security
+CẢNH BÁO DỮ LIỆU HỌC SINH
+Chỉ thu thập các trường cần thiết cho việc thi. Không công khai danh sách học sinh, điểm hoặc bảng nộp bài. Đặt thời hạn lưu, phân quyền người xem/chấm, sao lưu và xóa dữ liệu theo chính sách của trường. Không dùng mã cố định 123123 làm lớp bảo vệ duy nhất cho hệ thống thực tế.
+
+Tài liệu được xây dựng theo bộ ứng dụng và tệp V11.2 trong dự án Phòng thi trực tuyến THPT Hòn Đất; mô tả các bước phải thực hiện, không khẳng định hệ thống đã kết nối Supabase thật nếu chưa được kiểm thử trên dự án của nhà trường.
+Biên soạn: Giáo viên: Lê Bá Nhẫn – Trường THPT Hòn Đất (Tỉnh An Giang)
