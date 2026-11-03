@@ -1,8 +1,0 @@
-{
-  "name": "Phòng Thi Trực Tuyến - THPT Hòn Đất (V11.2)",
-  "description": "Hệ thống phòng thi trực tuyến V11.2 của Trường THPT Hòn Đất (An Giang) - Tác giả Lê Bá Nhẫn. Hỗ trợ nhập đề 3 phần, tự nhận diện đáp án Word/PDF, kiểm soát phát hành đa đề, chấm điểm tự động và đồng bộ Supabase.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
